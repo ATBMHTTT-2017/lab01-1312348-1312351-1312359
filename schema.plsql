@@ -239,8 +239,34 @@ INSERT INTO PHONG_BAN (MAPHONG,TENPHONG,TRUONGPHONG,NGAYNHAMCHUC,CHINHANH) VALUE
 INSERT INTO PHONG_BAN (MAPHONG,TENPHONG,TRUONGPHONG,NGAYNHAMCHUC,CHINHANH) VALUES (50,'Vivamus Nibh Dolor Company',79,'Mar 2, 2017',8);
 /
 
-UPDATE PHONG_BAN
-SET SONHANVIEN = (SELECT COUNT(*) FROM NHAN_VIEN WHERE MAPHONG = PHONG_BAN.MAPHONG);
+CREATE PROCEDURE update_PHONG_BAN
+AS
+BEGIN
+	UPDATE PHONG_BAN
+	SET SONHANVIEN = (SELECT COUNT(*) FROM NHAN_VIEN WHERE MAPHONG = PHONG_BAN.MAPHONG);
+END
+/
+
+CREATE OR REPLACE PROCEDURE update_PHONG_BAN
+as
+   type t_temp_storage is table of PHONG_BAN%rowtype;
+   my_temp_storage t_temp_storage;
+   dem INT;
+begin
+   select * bulk collect into my_temp_storage from PHONG_BAN;
+   for i in 1..my_temp_storage.count
+    loop
+    begin
+        SELECT count(*) INTO dem FROM NHAN_VIEN WHERE MAPHONG = my_temp_storage(i).MAPHONG;
+        update PHONG_BAN
+        set  SONHANVIEN = dem
+        where MAPHONG = my_temp_storage(i).MAPHONG;
+    end;
+   end loop; 
+end;
+/
+
+EXEC update_PHONG_BAN;
 /
 
 INSERT INTO DU_AN (MADA,TENDA,PHONGCHUTRI,TRUONGDA) VALUES (1,'Suscipit Nonummy PC',26,1);
@@ -381,8 +407,26 @@ INSERT INTO CHI_TIEU (MACHITIEU,TENCHITIEU,SOTIEN,DUAN) VALUES (99,'Non Leo Viva
 INSERT INTO CHI_TIEU (MACHITIEU,TENCHITIEU,SOTIEN,DUAN) VALUES (100,'Sapien Gravida Non Industries','5968896',24);
 /
 
-UPDATE DU_AN
-SET KINHPHI = (SELECT SUM(SOTIEN) FROM CHI_TIEU WHERE DUAN = DU_AN.MADA);
+CREATE OR REPLACE PROCEDURE update_DU_AN
+as
+   type t_temp_storage is table of DU_AN%rowtype;
+   my_temp_storage t_temp_storage;
+   dem number;
+begin
+   select * bulk collect into my_temp_storage from DU_AN;
+   for i in 1..my_temp_storage.count
+    loop
+    begin
+        SELECT SUM(SOTIEN) INTO dem FROM CHI_TIEU CT WHERE CT.DUAN = my_temp_storage(i).MADA group by CT.DUAN;
+        update DU_AN
+        set  KINHPHI = dem
+        where MADA = my_temp_storage(i).MADA;
+    end;
+   end loop; 
+end;
+/
+
+exec update_DU_AN;
 /
 
 INSERT INTO PHAN_CONG (MANV,DUAN,VAITRO,PHUCAP) VALUES (1,4,'Hamburg','1051258');
