@@ -1,0 +1,117 @@
+--- Tất cả nhân viên bình thường (trừ trưởng phòng, trưởng chi nhánh và các trưởng dự án) chỉ được phép xem thông tin nhân viên trong phòng của mình, chỉ được xem lương của bản thân (VPD)
+CREATE TABLE users 
+(id          NUMBER(10)   NOT NULL, 
+ username  VARCHAR2(50) NOT NULL);
+/
+INSERT INTO users VALUES (1,'user_1');
+INSERT INTO users VALUES (4,'user_4');
+INSERT INTO users VALUES (7,'user_7');
+INSERT INTO users VALUES (13,'user_13');
+INSERT INTO users VALUES (10,'user_10');
+INSERT INTO users VALUES (71,'user_71');
+INSERT INTO users VALUES (88,'user_88');
+INSERT INTO users VALUES (73,'user_73');
+INSERT INTO users VALUES (29,'user_29');
+INSERT INTO users VALUES (96,'user_96');
+INSERT INTO users VALUES (28,'user_28');
+INSERT INTO users VALUES (38,'user_38');
+INSERT INTO users VALUES (15,'user_15');
+INSERT INTO users VALUES (39,'user_39');
+INSERT INTO users VALUES (42,'user_42');
+INSERT INTO users VALUES (60,'user_60');
+INSERT INTO users VALUES (20,'user_20');
+INSERT INTO users VALUES (75,'user_75');
+INSERT INTO users VALUES (23,'user_23');
+INSERT INTO users VALUES (27,'user_27');
+/
+
+CONNECT schemaowner/schemaowner@service;
+
+CREATE CONTEXT SCHEMAOWNER USING SCHEMAOWNER.context_package;
+
+CREATE OR REPLACE PACKAGE context_package AS
+  PROCEDURE set_context;
+END;
+/
+
+CREATE OR REPLACE PACKAGE BODY context_package IS
+  PROCEDURE set_context IS
+    v_ouser  VARCHAR2(30);
+    v_id     NUMBER;
+  BEGIN
+    DBMS_SESSION.set_context('SCHEMAOWNER','SETUP','TRUE');
+    v_ouser := SYS_CONTEXT('USERENV','SESSION_USER');
+    
+    BEGIN
+      SELECT id
+      INTO   v_id
+      FROM   users
+      WHERE  username = v_ouser;
+      
+      DBMS_SESSION.set_context('SCHEMAOWNER','USER_ID', v_id);
+    EXCEPTION
+      WHEN NO_DATA_FOUND THEN
+        DBMS_SESSION.set_context('SCHEMAOWNER','USER_ID', 0);
+    END;
+    
+    DBMS_SESSION.set_context('SCHEMAOWNER','SETUP','FALSE');
+  END set_context;
+END context_package;
+/
+
+GRANT EXECUTE ON SCHEMAOWNER.context_package TO PUBLIC;
+CREATE PUBLIC SYNONYM context_package FOR SCHEMAOWNER.context_package;
+/
+
+CREATE OR REPLACE TRIGGER SCHEMAOWNER.set_security_context
+AFTER LOGON ON DATABASE
+BEGIN
+  SCHEMAOWNER.context_package.set_context;
+END;
+/
+
+CREATE OR REPLACE PACKAGE security_package AS
+  
+  FUNCTION nhan_vien_select_security(owner VARCHAR2, objname VARCHAR2)
+    RETURN VARCHAR2;
+END security_package;
+/
+
+CREATE OR REPLACE PACKAGE security_package AS
+  
+  FUNCTION nhan_vien_select_security(owner VARCHAR2, objname VARCHAR2)
+    RETURN VARCHAR2;
+END security_package;
+/
+
+CREATE OR REPLACE PACKAGE BODY Security_Package IS
+  FUNCTION nhan_vien_select_security(owner VARCHAR2, objname VARCHAR2) RETURN VARCHAR2 IS
+    predicate VARCHAR2(2000);
+  BEGIN
+    predicate := '1=2';
+    IF (SYS_CONTEXT('USERENV','SESSION_USER') = 'SCHEMAOWNER') THEN
+      predicate := NULL;
+    ELSE 
+      predicate := 'USER_ID = SYS_CONTEXT(''SCHEMAOWNER'',''USER_ID'')';
+    END IF;
+    RETURN predicate;
+  END nhan_vien_select_security;
+
+  FUNCTION nhan_vien_insert_security(owner VARCHAR2, objname VARCHAR2) RETURN VARCHAR2 IS
+    predicate VARCHAR2(2000);
+  BEGIN
+    predicate := '1=2';
+    IF (SYS_CONTEXT('USERENV','SESSION_USER') = 'SCHEMAOWNER') THEN
+      predicate := NULL;
+    ELSE 
+      predicate := 'USER_ID = SYS_CONTEXT(''SCHEMAOWNER'',''USER_ID'')';
+    END IF;
+    RETURN Predicate;
+  END nhan_vien_insert_security;
+END security_package;
+/
+
+  DBMS_RLS.add_policy('SCHEMAOWNER', 'NHAN_VIEN', 'USER_DATA_SELECT_POLICY',
+                      'SCHEMAOWNER', 'SECURITY_PACKAGE.USER_DATA_SELECT_SECURITY',
+                      'SELECT');
+                      /
