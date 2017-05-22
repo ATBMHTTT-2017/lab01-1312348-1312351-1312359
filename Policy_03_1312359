@@ -1,0 +1,2 @@
+--- Chỉ trưởng phòng được phép thêm và cập nhật thông tin vào dự án (DAC)
+GRANT insert, update ON DU_AN TO TRUONGPHONG

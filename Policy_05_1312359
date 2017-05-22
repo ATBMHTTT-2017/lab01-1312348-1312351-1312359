@@ -1,0 +1,3 @@
+--- Chỉ trưởng phòng, trưởng dự án được cấp quyền thực thi stored procedure cập nhật thông tin phòng ban của mình (DAC).
+GRANT EXECUTE on update_PHONG_BAN TO TRUONGPHONG;
+GRANT EXECUTE on update_DU_AN TO TRUONGDUAN;

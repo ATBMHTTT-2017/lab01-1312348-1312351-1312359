@@ -1,0 +1,2 @@
+--- Giám đốc được phép xem thông tin dự án gồm (mã dự án, tên dự án, kinh phí, tên phòng chủ trì, tên chi nhánh chủ trì, tên trưởng dự án và tổng chi) (DAC)
+GRANT select ON DU_AN TO TRUONGPHONG
