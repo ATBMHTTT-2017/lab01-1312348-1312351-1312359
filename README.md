@@ -4,7 +4,7 @@
 
 Thành viên:
 * [x] **1312359** Đào Chí Minh (1312359)
-* [ ] **MSSV2** Tên sinh viên 2 (tên tài khoản github)
+* [x] **1312351** Phan Duy Luận (luanpd)
 * [ ] **MSSV3** Tên sinh viên 2 (tên tài khoản github)
 
 ## Yêu cầu
